@@ -1,9 +1,15 @@
 import { Router } from 'express'
+import { body } from 'express-validator'
 import userAuthController from '../controllers/user-controller.js'
 
 const router = new Router()
 
-router.post('/registration', userAuthController.registration)
+router.post(
+  '/registration',
+  body('email').isEmail(),
+  body('password').isLength({ min: 3, max: 32 }),
+  userAuthController.registration
+)
 router.post('/login', userAuthController.login)
 router.post('/logout', userAuthController.logout)
 
