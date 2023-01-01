@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken'
-import { secret } from '../config.js'
+import ApiError from '../exceptions/api-error.js'
+import tokenService from '../service/token-service.js'
 
 export default function (req, res, next) {
   if (req.method === 'OPTIONS') {
@@ -7,15 +7,17 @@ export default function (req, res, next) {
   }
 
   try {
-    const token = req.headers.authorization.split(' ')[1]
-    if (!token) {
-      return res.status(403).json({ message: 'User not authorized' })
+    const accessToken = req.headers.authorization.split(' ')[1]
+    if (!accessToken) {
+      return next(ApiError.UnauthorizedError())
     }
-    const decodedData = jwt.verify(token, secret.secret)
-    req.user = decodedData
+    const userData = tokenService.validateAccessToken(accessToken)
+    if (!userData) {
+      return next(ApiError.UnauthorizedError())
+    }
+    req.user = userData
     next()
   } catch (error) {
-    console.log(error)
-    return res.status(403).json({ message: 'User not authorized' })
+    return next(ApiError.UnauthorizedError())
   }
 }
